@@ -32,11 +32,13 @@ ENTITY_PATTERNS = {
         r"用户[：:]\s*(\w+)",
     ],
     "project": [
-        r"(?:项目[：:]?\s*)?[\u300c\u3008\"']([\w\-]+(?:平台|系统|工具|课程|运营|监控|课程))[\u300d\u3009\"']",
-        r"(?:BotLearn|OpenClaw|Agent Reach|Rube MCP|Twitter自动化|虾评)",
+        r"(?:项目[：:]?\s*)?[\u300c\u3008\"']([\w\-]+(?:平台|系统|工具|课程|运营|监控|课程|kit))[\u300d\u3009\"']",
+        r"(?:BotLearn|OpenClaw|Agent Reach|Rube MCP|Twitter自动化|虾评|agent-upgrade-kit|agent-cognitive-kit)",
     ],
     "tool": [
         r"(?:使用|用|安装了?)\s*[\u300c\u3008\"']?(\b(?:OpenClaw|Claude Code|Drizzle|Supabase|Next\.js|Playwright|faster-whisper|Obsidian|gh CLI|opencli|agent-reach|xreach|ChromaDB|Redis|PostgreSQL)\b)",
+        r"\b([\w\-]+\.py)\b",
+        r"\b(startup_hook|log_loop|build_index|query_index)\b",
     ],
     "event": [
         r"(\d{4}-\d{2}-\d{2})\s*(?:完成了?|发布了?|部署了?|修复了?|启动了?|发现了?)",
@@ -62,6 +64,22 @@ def extract_entities(text: str) -> list[dict]:
     """Extract entities from text."""
     entities = []
     seen = set()
+    
+    # Dynamic extraction: catch project names from headings and key-value pairs
+    heading_pattern = re.compile(r'#{1,3}\s+(?:.+?[：:]\s*)?([\w\-]{3,}(?:kit|system|loop|hook|index|module))', re.IGNORECASE)
+    for m in heading_pattern.finditer(text):
+        name = m.group(1)
+        if name not in seen and len(name) > 3:
+            seen.add(name)
+            entities.append({"name": name, "type": "project"})
+    
+    # Dynamic: catch backtick-wrapped names as tools
+    tick_pattern = re.compile(r'`([\w\-]+\.(?:py|sh|js|md))`')
+    for m in tick_pattern.finditer(text):
+        name = m.group(1)
+        if name not in seen:
+            seen.add(name)
+            entities.append({"name": name, "type": "tool"})
     
     for etype, patterns in ENTITY_PATTERNS.items():
         for pattern in patterns:
