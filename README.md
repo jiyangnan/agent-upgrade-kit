@@ -16,9 +16,40 @@
 
 基于 Hybrid-Vector-Graph 架构的记忆索引系统：实体图谱 + 时间线 + 标签共现。让 Agent 拥有结构化的长期记忆检索能力。
 
+**核心效果**：每次启动自动恢复记忆，查询速度 < 100ms
+
 ### 3. ⚡ Autonomous Loop — 自主循环技能
 
 可复用的迭代框架：目标→执行→评估→调整→重复。带策略轮换和安全护栏，适用于任何需要反复尝试直到达标的场景。
+
+**核心效果**：每次循环自动记录结果并更新索引
+
+---
+
+## 🚀 一体化集成（2026-04-29）
+
+
+三个模块现已联动：
+
+```
+启动 → startup_hook.py → 加载索引 → 恢复记忆
+                         ↓
+行动 → log_loop.py → 记录结果 → 更新索引
+                         ↓
+下次启动 → startup_hook.py → 加载最新记忆
+```
+
+**启动命令**：
+```bash
+bash scripts/agent-startup.sh
+# 或
+python3 memory/startup_hook.py
+```
+
+**每次循环后记录**：
+```bash
+python3 memory/log_loop.py "BotLearn score ≥88" "Best: 84.8" "3 cycles"
+```
 
 ---
 
